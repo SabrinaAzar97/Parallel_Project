@@ -1,3 +1,5 @@
+#include <omp.h>
+
 #include "black_scholes.h"
 #include "parser.h"
 #include "random.h"
@@ -60,6 +62,7 @@ main (int argc, char* argv[])
   /*
    * Run the benchmark and time it.
    */
+  omp_set_num_threads(nthreads);
   t1 = get_seconds ();
   black_scholes (&interval, S, E, r, sigma, T, M);
   t2 = get_seconds ();
