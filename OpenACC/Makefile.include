@@ -3,18 +3,18 @@
 #
 
 #CC = icc
-CC = gcc
+CC = pgcc
 
 #COPTFLAGS = -O2
-COPTFLAGS = -g
+COPTFLAGS = 
 
 CPPFLAGS = 
 
-CFLAGS = -fopenmp $(COPTFLAGS)
+CFLAGS = -acc -Minfo:accel -fast -mp -Minfo $(COPTFLAGS)
 #CFLAGS = -Wall $(COPTFLAGS)
 
 #LINKER = icc
-LINKER = gcc
+LINKER = pgcc
 
 LDFLAGS = -lm -lpthread
 
