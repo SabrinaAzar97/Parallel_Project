@@ -10,7 +10,7 @@ COPTFLAGS = -g
 
 CPPFLAGS = 
 
-CFLAGS = $(COPTFLAGS)
+CFLAGS = -fopenmp $(COPTFLAGS)
 #CFLAGS = -Wall $(COPTFLAGS)
 
 #LINKER = icc
