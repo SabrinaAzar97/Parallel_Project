@@ -1,3 +1,5 @@
+#include <omp.h>
+
 #include "black_scholes.h"
 #include "gaussian.h"
 #include "random.h" 
@@ -43,6 +45,8 @@ black_scholes_stddev (void* the_args)
   double variance = 0.0;
   int k;
 
+// simple reduction
+#pragma omp parallel for reduction(+:variance)
   for (k = 0; k < M; k++)
     {
       const double diff = args->trials[k] - mean;
@@ -85,23 +89,57 @@ black_scholes_iterate (void* the_args)
 
   /* Temporary variables */
   gaussrand_state_t gaussrand_state;
-  void* prng_stream = NULL; 
+  int* state = NULL; 
   int k;
 
   /* Spawn a random number generator */
-  prng_stream = spawn_prng_stream (0);
+  // prng_stream = spawn_prng_stream (0);
 
   /* Initialize the Gaussian random number module for this thread */
   init_gaussrand_state (&gaussrand_state);
+
+  int nthreads = omp_get_max_threads();
+  //void **prng_streams;
+  //prng_streams = malloc(nthreads * sizeof(void *));
+  //
+  // First, we want to make random numbers and put them in an array
+  int **states;
+  states = malloc(nthreads * sizeof(int *));
+  gaussrand_state_t *gaussrand_states;
+  gaussrand_states = malloc(nthreads * sizeof(gaussrand_state_t));
+  // For every thread we make a new random number generator
+  // This way each thread can make random numbers in parallel
+#pragma omp parallel
+{
+    int thread_num = omp_get_thread_num();
+    states[thread_num] = thread_num + time(NULL);
+    init_gaussrand_state (&(gaussrand_states[thread_num]));
+}
+  // Now we generate the random numbers and put them in an array
+  double *grns;
+  grns = malloc(M * sizeof(double));
+#pragma omp parallel for
+  for (k = 0; k < M; k++){
+      /*int thread_num = omp_get_thread_num();
+      grns[k] = gaussrand1 (&uniform_random_double,
+							prng_streams[thread_num],
+							&(gaussrand_states[thread_num]));
+                            */
+      int thread_num = omp_get_thread_num();
+      // we use the random number generator we made for each thread
+      grns[k] = gaussrand1 (&uniform_random_double,
+							&states[thread_num],
+							&(gaussrand_states[thread_num]));
+  }
   
+// simple reduction
+#pragma omp parallel reduction(+:mean)
+{
   /* Do the Black-Scholes iterations */
+#pragma omp for
   for (k = 0; k < M; k++)
     {
-      const double gaussian_random_number = gaussrand1 (&uniform_random_double,
-							prng_stream,
-							&gaussrand_state);
-      trials[k] = black_scholes_value (S, E, r, sigma, T, 
-				       gaussian_random_number);
+      trials[k] = black_scholes_value (S, E, r, sigma, T, grns[k]);
 
       /*
        * We scale each term of the sum in order to avoid overflow. 
@@ -110,6 +148,7 @@ black_scholes_iterate (void* the_args)
        */
       mean += trials[k] / (double) M;
     }
+}
 
   /* Pack the OUT values into the args struct */
   args->mean = mean;
@@ -118,7 +157,7 @@ black_scholes_iterate (void* the_args)
    * We do the standard deviation computation as a second operation.
    */
 
-  free_prng_stream (prng_stream);
+  // free_prng_stream (prng_stream);
   return NULL;
 }
 

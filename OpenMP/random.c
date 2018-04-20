@@ -12,7 +12,7 @@
  * initialize it this way (with PTHREAD_MUTEX_INITIALIZER), you don't
  * have to call pthread_mutex_init() on it before using it.
  */
-static pthread_mutex_t prng_mutex = PTHREAD_MUTEX_INITIALIZER;
+// static pthread_mutex_t prng_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /**
  * This ensures that init_prng_impl() is only called once.  We don't
@@ -69,9 +69,9 @@ init_prng (uint32_t seed)
    */
 
   /* Set the global seed variable */
-  assert (0 == pthread_mutex_lock (&prng_mutex));
+  // assert (0 == pthread_mutex_lock (&prng_mutex));
   prng_seed = seed;
-  assert (0 == pthread_mutex_unlock (&prng_mutex));
+  // assert (0 == pthread_mutex_unlock (&prng_mutex));
 
   /* Initialize the global PRNG */
   pthread_once (&prng_once, &init_prng_impl);
@@ -105,16 +105,19 @@ free_prng_stream (void* prng_stream)
 
 
 double
-uniform_random_double (void* prng_stream)
+uniform_random_double (int *state)
 {
 #ifdef USE_MERSENNE_TWISTER
-  return genrand_double ((mt_struct*) prng_stream);
+  // return genrand_double ((mt_struct*) prng_stream);
 #else
+  /*
   double d;
   assert (0 == pthread_mutex_lock (&prng_mutex));
   d = (double) rand () / (double) RAND_MAX;
   assert (0 == pthread_mutex_unlock (&prng_mutex));
   return d;
+  */
+  return (double) rand_r(state) / (double) RAND_MAX;
 #endif /* USE_MERSENNE_TWISTER */
 }
 

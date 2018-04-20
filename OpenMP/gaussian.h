@@ -67,7 +67,7 @@ gaussrand (const double_generator_no_input_t f,
  */
 double
 gaussrand1 (const double_generator_one_input_t f,
-	    void* f_state,
+	    int* f_state,
 	    gaussrand_state_t* gaussrand_state);
 
 

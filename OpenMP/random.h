@@ -58,6 +58,6 @@ free_prng_stream (void* prng_stream);
  *       so it should only used be called by one thread.  
  */
 double
-uniform_random_double (void* prng_stream);
+uniform_random_double (int* state);
 
 #endif /* _random_h */
