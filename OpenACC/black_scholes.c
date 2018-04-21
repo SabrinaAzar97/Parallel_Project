@@ -46,7 +46,7 @@ black_scholes_stddev (void* the_args)
   int k;
 
 // simple reduction
-#pragma omp parallel for reduction(+:variance)
+#pragma acc loop independent reduction(+:variance)
   for (k = 0; k < M; k++)
     {
       const double diff = args->trials[k] - mean;
@@ -132,11 +132,13 @@ black_scholes_iterate (void* the_args)
 							&(gaussrand_states[thread_num]));
   }
   
-// simple reduction
-#pragma omp parallel reduction(+:mean)
+// We want trials and grns to go in because we access them all the time
+// We want the result (trials) to be copied out because it's what we want
+#pragma acc kernels copyin(trials[0:M], grns[0:M]) copyout(trials[0:M])
 {
   /* Do the Black-Scholes iterations */
-#pragma omp for
+// simple reduction
+#pragma acc loop reduction(+:mean)
   for (k = 0; k < M; k++)
     {
       trials[k] = black_scholes_value (S, E, r, sigma, T, grns[k]);
