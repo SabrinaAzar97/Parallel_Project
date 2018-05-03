@@ -1,0 +1,21 @@
+# Makefile.include
+# Platform-dependent settings for HW1
+#
+
+#CC = icc
+CC = nvcc
+
+#COPTFLAGS = -O2
+COPTFLAGS = -g
+
+CPPFLAGS = 
+
+CFLAGS = $(COPTFLAGS)
+#CFLAGS = -Wall $(COPTFLAGS)
+
+#LINKER = icc
+LINKER = nvcc
+
+LDFLAGS = -lm
+
+
